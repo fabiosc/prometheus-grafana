@@ -1,0 +1,43 @@
+version: '3.7'
+
+networks:
+  prometheus-grafana:
+    driver: bridge
+
+volumes:
+  prometheus:
+  grafana:
+
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/config/web.yml:/etc/prometheus/web.yml
+      - prometheus:/prometheus
+    ports:
+      - "9090:9090"
+    networks: 
+      - prometheus-grafana
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle'
+      - '--web.config.file=/etc/prometheus/web.yml'
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    volumes:
+      - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini
+      - grafana:/grafana
+
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_DISABLE_LOGIN_FORM=false
+      - GF_SECURITY_ADMIN_USER:admin
+      - GF_SECURITY_ADMIN_PASSWORD:changeme
+    ports:
+      - "3000:3000"
+    networks:
+      - prometheus-grafana
